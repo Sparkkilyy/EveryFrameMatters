@@ -25,7 +25,7 @@ const env = process.env
 const PORT = process.env.PORT || 3000;
 
 // Security configuration
-const ADMIN_REGISTRATION_KEY = process.env.ADMIN_KEY || 'skibidiskibidiaype';
+const ADMIN_REGISTRATION_KEY = process.env.ADMIN_KEY;
 const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
 const SALT_ROUNDS = 12;
 const IMAGE_ASSIGNMENT_TIMEOUT = 5 * 60 * 1000; // 5 minutes
