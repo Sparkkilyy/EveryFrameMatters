@@ -1,0 +1,27 @@
+{
+  "metroid": {
+    "username": "metroid",
+    "password": "$2b$12$1bYGD2yADt4klG1yjpkTReoulkdlyMag/37RVpO.WjWsxvkflbS9e",
+    "createdAt": "2025-08-05T21:09:34.697Z"
+  },
+  "quack": {
+    "username": "quack",
+    "password": "$2b$12$8Ubz.eO7Y2JWlsO7JDzOCOfveQbleYFZa1iHVbrsu/SCRq7/nvbnO",
+    "createdAt": "2025-08-05T21:10:00.753Z"
+  },
+  "sparkkily": {
+    "username": "sparkkily",
+    "password": "$2b$12$9Dh7lge0xoaQDVBkgo2YRe6qpA4UXW.yMHdCgOQc0Om41qKSEJclO",
+    "createdAt": "2025-08-05T21:10:21.919Z"
+  },
+  "humza": {
+    "username": "humza",
+    "password": "$2b$12$IBsWi0SiFy4fGxth0aW96O32xKc.wvyyzE6wCclSwc9fHYsIvhlZ.",
+    "createdAt": "2025-08-05T22:08:53.294Z"
+  },
+  "meerab": {
+    "username": "meerab",
+    "password": "$2b$12$.IHv/eNNf1qhQ2MOtLl2he5lie.KjtDsxUtSsOBAqUWkjdH6HAiK2",
+    "createdAt": "2025-08-05T22:59:41.303Z"
+  }
+}

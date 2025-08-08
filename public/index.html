@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>every frame matters</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      color: #ffffff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 20px 0;
+      border-bottom: 2px solid #333;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(45deg, #00d4ff, #ff006e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .sync-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0, 212, 255, 0.1);
+      padding: 8px 15px;
+      border-radius: 20px;
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .sync-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #00d4ff;
+      animation: pulse 2s infinite;
+    }
+
+    .sync-dot.disconnected {
+      background: #ff4757;
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    .login-container, .main-app {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .login-container {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #e0e0e0;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #00d4ff;
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+    }
+
+    .btn {
+      background: linear-gradient(45deg, #00d4ff, #0099cc);
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      margin: 5px;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn-danger {
+      background: linear-gradient(45deg, #ff006e, #cc0055);
+    }
+
+    .btn-danger:hover {
+      box-shadow: 0 5px 15px rgba(255, 0, 110, 0.4);
+    }
+
+    .btn-success {
+      background: linear-gradient(45deg, #00ff88, #00cc6a);
+    }
+
+    .btn-success:hover {
+      box-shadow: 0 5px 15px rgba(0, 255, 136, 0.4);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(45deg, #666, #444);
+    }
+
+    .btn-secondary:hover {
+      box-shadow: 0 5px 15px rgba(102, 102, 102, 0.4);
+    }
+
+    .image-container {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .image-display {
+      flex: 2;
+      text-align: center;
+    }
+
+    .image-display img {
+      max-width: 100%;
+      max-height: 500px;
+      border-radius: 10px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    .controls-panel {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .controls-panel h3 {
+      margin-bottom: 20px;
+      color: #00d4ff;
+      font-size: 1.2rem;
+    }
+
+    .filter-group {
+      margin-bottom: 15px;
+    }
+
+    .filter-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #e0e0e0;
+    }
+
+    .filter-slider {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      outline: none;
+      -webkit-appearance: none;
+      margin-bottom: 5px;
+    }
+
+    .filter-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #00d4ff, #0099cc);
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0, 212, 255, 0.5);
+    }
+
+    .filter-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #00d4ff, #0099cc);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 8px rgba(0, 212, 255, 0.5);
+    }
+
+    .filter-value {
+      font-size: 12px;
+      color: #00d4ff;
+      font-weight: 500;
+    }
+
+    .action-buttons {
+      text-align: center;
+      margin: 30px 0;
+    }
+
+    .progress-info {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 18px;
+      color: #e0e0e0;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(45deg, #00d4ff, #00ff88);
+      transition: width 0.3s ease;
+    }
+
+    .user-info {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .session-info {
+      font-size: 12px;
+      color: #999;
+      margin-top: 5px;
+    }
+
+    .results-section {
+      margin-top: 30px;
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .error {
+      color: #ff4757;
+      text-align: center;
+      margin: 10px 0;
+      padding: 10px;
+      background: rgba(255, 71, 87, 0.1);
+      border: 1px solid rgba(255, 71, 87, 0.3);
+      border-radius: 5px;
+    }
+
+    .success {
+      color: #2ed573;
+      text-align: center;
+      margin: 10px 0;
+      padding: 10px;
+      background: rgba(46, 213, 115, 0.1);
+      border: 1px solid rgba(46, 213, 115, 0.3);
+      border-radius: 5px;
+    }
+
+    .info {
+      color: #00d4ff;
+      text-align: center;
+      margin: 10px 0;
+      padding: 10px;
+      background: rgba(0, 212, 255, 0.1);
+      border: 1px solid rgba(0, 212, 255, 0.3);
+      border-radius: 5px;
+    }
+
+    .register-mode {
+      background: rgba(255, 206, 84, 0.1);
+      border: 1px solid rgba(255, 206, 84, 0.3);
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    .register-mode h3 {
+      color: #ffce54;
+      margin-bottom: 10px;
+    }
+
+    .register-mode p {
+      color: #e0e0e0;
+      font-size: 14px;
+    }
+
+    .toggle-mode {
+      text-align: center;
+      margin-top: 15px;
+    }
+
+    .toggle-mode a {
+      color: #00d4ff;
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .toggle-mode a:hover {
+      text-decoration: underline;
+    }
+
+    .password-strength {
+      margin-top: 5px;
+      font-size: 12px;
+    }
+
+    .strength-weak { color: #ff4757; }
+    .strength-medium { color: #ffce54; }
+    .strength-strong { color: #2ed573; }
+
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .rate-limit-warning {
+      background: rgba(255, 206, 84, 0.1);
+      border: 1px solid rgba(255, 206, 84, 0.3);
+      color: #ffce54;
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      font-size: 14px;
+    }
+
+    .waiting-status {
+      text-align: center;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .waiting-status h3 {
+      color: #ffce54;
+      margin-bottom: 15px;
+    }
+
+    .waiting-status .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid rgba(0, 212, 255, 0.3);
+      border-top: 4px solid #00d4ff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .team-activity {
+      background: rgba(0, 255, 136, 0.1);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      padding: 10px;
+      border-radius: 5px;
+      margin: 10px 0;
+      font-size: 14px;
+      animation: fadeIn 0.5s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .live-stats {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 20px 0;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stat-item {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #00d4ff;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #999;
+      margin-top: 5px;
+    }
+
+    @media (max-width: 768px) {
+      .image-container {
+        flex-direction: column;
+      }
+
+      .user-info {
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-bottom: 20px;
+      }
+
+      .live-stats {
+        flex-direction: column;
+        gap: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>every frame matters</h1>
+    <p>Collaborative real-time frame classification</p>
+    <div id="syncIndicator" class="sync-indicator hidden">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncStatus">Connecting...</span>
+    </div>
+  </div>
+
+  <!-- Login Section -->
+  <div id="loginSection" class="login-container">
+    <div id="registerMode" class="register-mode hidden">
+      <h3>🔐 Private Registration</h3>
+      <p>This system requires an admin key to register new accounts. Registration is restricted to authorized users only.</p>
+    </div>
+
+    <h2 id="authTitle" style="text-align: center; margin-bottom: 20px;">Login</h2>
+
+    <div class="form-group">
+      <label for="username">Username:</label>
+      <input type="text" id="username" placeholder="Enter username" autocomplete="username">
+    </div>
+
+    <div class="form-group">
+      <label for="password">Password:</label>
+      <input type="password" id="password" placeholder="Enter password" autocomplete="current-password">
+      <div id="passwordStrength" class="password-strength hidden"></div>
+    </div>
+
+    <div id="adminKeyGroup" class="form-group hidden">
+      <label for="adminKey">Admin Key:</label>
+      <input type="password" id="adminKey" placeholder="Enter admin registration key">
+      <div style="font-size: 12px; color: #999; margin-top: 5px;">
+        Required for account registration
+      </div>
+    </div>
+
+    <div style="text-align: center;">
+      <button id="loginBtn" class="btn" onclick="login()">Login</button>
+      <button id="registerBtn" class="btn btn-secondary hidden" onclick="register()">Register</button>
+    </div>
+
+    <div id="authError" class="error hidden"></div>
+    <div id="authSuccess" class="success hidden"></div>
+    <div id="rateLimitWarning" class="rate-limit-warning hidden"></div>
+
+    <div class="toggle-mode">
+      <a id="toggleModeLink" onclick="toggleAuthMode()">Need to register an account?</a>
+    </div>
+  </div>
+
+  <!-- Main App Section -->
+  <div id="mainApp" class="main-app hidden">
+    <div class="user-info">
+      <span>Welcome, <span id="currentUser"></span></span>
+      <div class="session-info">
+        Session expires: <span id="sessionExpiry"></span>
+      </div>
+      <button class="btn" onclick="logout()" style="margin-left: 10px; padding: 5px 10px; font-size: 12px;">Logout</button>
+    </div>
+
+    <!-- Live Statistics -->
+    <div class="live-stats">
+      <div class="stat-item">
+        <div class="stat-value" id="completedCount">0</div>
+        <div class="stat-label">Completed</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="assignedCount">0</div>
+        <div class="stat-label">In Progress</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="remainingCount">0</div>
+        <div class="stat-label">Available</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="totalCount">0</div>
+        <div class="stat-label">Total Images</div>
+      </div>
+    </div>
+
+    <div class="progress-info">
+      <span id="progressText">Team Progress</span>
+    </div>
+    <div class="progress-bar">
+      <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+    </div>
+
+    <!-- Image Container or Status Display -->
+    <div id="imageContainer" class="image-container">
+      <div class="image-display">
+        <img id="currentImage" src="" alt="Current image to label" style="filter: brightness(1) contrast(1) saturate(1) hue-rotate(0deg) blur(0px) sepia(0) invert(0);">
+        <div id="imageInfo" style="margin-top: 10px; font-size: 14px; color: #999; opacity: 0.8;"></div>
+      </div>
+
+      <div class="controls-panel">
+        <h3>Image Filters</h3>
+        <p style="font-size: 12px; margin-bottom: 15px; color: #999;">
+          Adjust these filters to reveal hidden details
+        </p>
+
+        <div class="filter-group">
+          <label for="exposure">Exposure: <span class="filter-value" id="exposureValue">100%</span></label>
+          <input type="range" id="exposure" class="filter-slider" min="10" max="400" value="100">
+        </div>
+
+        <div class="filter-group">
+          <label for="brightness">Brightness: <span class="filter-value" id="brightnessValue">100%</span></label>
+          <input type="range" id="brightness" class="filter-slider" min="0" max="300" value="100">
+        </div>
+
+        <div class="filter-group">
+          <label for="contrast">Contrast: <span class="filter-value" id="contrastValue">100%</span></label>
+          <input type="range" id="contrast" class="filter-slider" min="0" max="300" value="100">
+        </div>
+
+        <div class="filter-group">
+          <label for="saturation">Saturation: <span class="filter-value" id="saturationValue">100%</span></label>
+          <input type="range" id="saturation" class="filter-slider" min="0" max="300" value="100">
+        </div>
+
+        <div class="filter-group">
+          <label for="hue">Hue Rotate: <span class="filter-value" id="hueValue">0°</span></label>
+          <input type="range" id="hue" class="filter-slider" min="0" max="360" value="0">
+        </div>
+
+        <div class="filter-group">
+          <label for="blur">Blur: <span class="filter-value" id="blurValue">0px</span></label>
+          <input type="range" id="blur" class="filter-slider" min="0" max="10" value="0" step="0.1">
+        </div>
+
+        <div class="filter-group">
+          <label for="sepia">Sepia: <span class="filter-value" id="sepiaValue">0%</span></label>
+          <input type="range" id="sepia" class="filter-slider" min="0" max="100" value="0">
+        </div>
+
+        <div class="filter-group">
+          <label for="invert">Invert: <span class="filter-value" id="invertValue">0%</span></label>
+          <input type="range" id="invert" class="filter-slider" min="0" max="100" value="0">
+        </div>
+
+        <button class="btn" onclick="resetFilters()" style="width: 100%; margin-top: 15px;">Reset Filters</button>
+      </div>
+    </div>
+
+    <!-- Waiting Status -->
+    <div id="waitingStatus" class="waiting-status hidden">
+      <h3>⏳ Waiting for Available Image</h3>
+      <div class="spinner"></div>
+      <p>All images are currently being worked on by other team members.<br>
+        You'll automatically get the next available image.</p>
+      <button class="btn" onclick="requestNewImage()" style="margin-top: 20px;">Try Again</button>
+    </div>
+
+    <!-- Action Buttons -->
+    <div id="actionButtons" class="action-buttons">
+      <button class="btn btn-danger" onclick="labelImage(false)">Not Interesting</button>
+      <button class="btn btn-success" onclick="labelImage(true)">Interesting</button>
+    </div>
+
+    <!-- Team Activity Feed -->
+    <div id="activityFeed"></div>
+
+    <!-- Completion Message -->
+    <div id="completionMessage" class="success hidden">
+      <h3>Congratulations! 🎉</h3>
+      <p>The team has successfully labeled all images. Thank you for your contribution!</p>
+      <button class="btn" onclick="viewResults()">View Results</button>
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsSection" class="results-section hidden">
+      <h3>Labeling Results</h3>
+      <div id="resultsContent"></div>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  let token = null;
+  let currentImageData = null;
+  let sessionExpiry = null;
+  let isRegistering = false;
+  let socket = null;
+  let currentUsername = null;
+  const API_BASE = '/api';
+
+  // WebSocket connection and management
+  function connectWebSocket() {
+    if (!token) return;
+
+    socket = io();
+
+    socket.on('connect', () => {
+      console.log('WebSocket connected');
+      updateSyncStatus('Connected', true);
+      socket.emit('authenticate', token);
+    });
+
+    socket.on('disconnect', () => {
+      console.log('WebSocket disconnected');
+      updateSyncStatus('Disconnected', false);
+    });
+
+    socket.on('authenticated', (data) => {
+      console.log('WebSocket authenticated for user:', data.username);
+      updateSyncStatus('Live Sync Active', true);
+      // Request an image after successful authentication
+      requestNewImage();
+    });
+
+    socket.on('authError', (error) => {
+      console.error('WebSocket auth error:', error);
+      updateSyncStatus('Authentication Failed', false);
+      logout();
+    });
+
+    socket.on('imageAssigned', (imageData) => {
+      displayImage(imageData);
+    });
+
+    socket.on('noImagesAvailable', (data) => {
+      if (data.completed) {
+        showCompletionMessage();
+      } else {
+        showWaitingStatus();
+      }
+    });
+
+    socket.on('progressUpdate', (data) => {
+      updateLiveStats(data);
+    });
+
+    socket.on('imageCompleted', (data) => {
+      showTeamActivity(`🎉 ${data.labeledBy} labeled "${data.filename}" as ${data.isInteresting ? 'interesting' : 'not interesting'}`);
+
+      // If this was the current image, request a new one
+      if (currentImageData && currentImageData.imageIndex === data.imageIndex) {
+        showSuccess('Another team member completed this image! Getting you a new one...');
+        setTimeout(() => {
+          requestNewImage();
+        }, 2000);
+      }
+    });
+
+    socket.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      showError(error);
+    });
+  }
+
+  function updateSyncStatus(status, connected) {
+    const indicator = document.getElementById('syncIndicator');
+    const dot = document.getElementById('syncDot');
+    const statusText = document.getElementById('syncStatus');
+
+    if (token) {
+      indicator.classList.remove('hidden');
+      statusText.textContent = status;
+
+      if (connected) {
+        dot.classList.remove('disconnected');
+      } else {
+        dot.classList.add('disconnected');
+      }
+    } else {
+      indicator.classList.add('hidden');
+    }
+  }
+
+  function requestNewImage() {
+    if (socket && socket.connected) {
+      socket.emit('requestImage');
+      hideWaitingStatus();
+    } else {
+      showError('Not connected to server. Please refresh the page.');
+    }
+  }
+
+  // Session management
+  function updateSessionExpiry(expiresIn) {
+    if (expiresIn) {
+      sessionExpiry = new Date(Date.now() + expiresIn);
+      updateSessionDisplay();
+
+      // Set up session expiry warning
+      const warningTime = expiresIn - (5 * 60 * 1000); // 5 minutes before expiry
+      if (warningTime > 0) {
+        setTimeout(() => {
+          if (token) {
+            showError('Your session will expire in 5 minutes. Please save your work.');
+          }
+        }, warningTime);
+      }
+    }
+  }
+
+  function updateSessionDisplay() {
+    if (sessionExpiry) {
+      const expiryElement = document.getElementById('sessionExpiry');
+      if (expiryElement) {
+        expiryElement.textContent = sessionExpiry.toLocaleTimeString();
+      }
+    }
+  }
+
+  // Authentication functions
+  function toggleAuthMode() {
+    isRegistering = !isRegistering;
+    const title = document.getElementById('authTitle');
+    const loginBtn = document.getElementById('loginBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const toggleLink = document.getElementById('toggleModeLink');
+    const registerMode = document.getElementById('registerMode');
+    const adminKeyGroup = document.getElementById('adminKeyGroup');
+    const passwordField = document.getElementById('password');
+    const passwordStrength = document.getElementById('passwordStrength');
+
+    if (isRegistering) {
+      title.textContent = 'Register';
+      loginBtn.classList.add('hidden');
+      registerBtn.classList.remove('hidden');
+      toggleLink.textContent = 'Already have an account? Login';
+      registerMode.classList.remove('hidden');
+      adminKeyGroup.classList.remove('hidden');
+      passwordField.setAttribute('autocomplete', 'new-password');
+      passwordStrength.classList.remove('hidden');
+
+      // Add password strength checker
+      passwordField.addEventListener('input', checkPasswordStrength);
+    } else {
+      title.textContent = 'Login';
+      loginBtn.classList.remove('hidden');
+      registerBtn.classList.add('hidden');
+      toggleLink.textContent = 'Need to register an account?';
+      registerMode.classList.add('hidden');
+      adminKeyGroup.classList.add('hidden');
+      passwordField.setAttribute('autocomplete', 'current-password');
+      passwordStrength.classList.add('hidden');
+
+      // Remove password strength checker
+      passwordField.removeEventListener('input', checkPasswordStrength);
+    }
+
+    hideMessages();
+  }
+
+  function checkPasswordStrength() {
+    const password = document.getElementById('password').value;
+    const strengthDiv = document.getElementById('passwordStrength');
+
+    if (password.length === 0) {
+      strengthDiv.textContent = '';
+      strengthDiv.className = 'password-strength hidden';
+      return;
+    }
+
+    let score = 0;
+    let feedback = [];
+
+    if (password.length >= 8) score++;
+    else feedback.push('at least 8 characters');
+
+    if (/[a-z]/.test(password)) score++;
+    else feedback.push('lowercase letters');
+
+    if (/[A-Z]/.test(password)) score++;
+    else feedback.push('uppercase letters');
+
+    if (/[0-9]/.test(password)) score++;
+    else feedback.push('numbers');
+
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
+    else feedback.push('special characters');
+
+    let className = 'password-strength ';
+    let message = '';
+
+    if (score < 2) {
+      className += 'strength-weak';
+      message = 'Weak - Add: ' + feedback.slice(0, 3).join(', ');
+    } else if (score < 4) {
+      className += 'strength-medium';
+      message = 'Medium - Consider adding: ' + feedback.slice(0, 2).join(', ');
+    } else {
+      className += 'strength-strong';
+      message = 'Strong password ✓';
+    }
+
+    strengthDiv.className = className;
+    strengthDiv.textContent = message;
+  }
+
+  async function login() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!username || !password) {
+      showError('Please enter both username and password');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await response.json();
+
+      if (response.status === 429) {
+        showRateLimitWarning('Too many login attempts. Please wait before trying again.');
+        return;
+      }
+
+      if (response.ok) {
+        token = data.token;
+        currentUsername = data.username;
+        document.getElementById('currentUser').textContent = data.username;
+        updateSessionExpiry(data.expiresIn);
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+
+        // Connect WebSocket for real-time sync
+        connectWebSocket();
+        hideMessages();
+      } else {
+        showError(data.error);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      showError('Login failed. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function register() {
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+    const adminKey = document.getElementById('adminKey').value;
+
+    if (!username || !password || !adminKey) {
+      showError('Please fill in all fields');
+      return;
+    }
+
+    if (password.length < 8) {
+      showError('Password must be at least 8 characters long');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ username, password, adminKey })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        showSuccess(`Registration successful! You can now login with username: ${data.username}`);
+        // Clear the form
+        document.getElementById('username').value = '';
+        document.getElementById('password').value = '';
+        document.getElementById('adminKey').value = '';
+        // Switch back to login mode
+        setTimeout(() => {
+          toggleAuthMode();
+        }, 2000);
+      } else {
+        showError(data.error);
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      showError('Registration failed. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function logout() {
+    try {
+      if (token) {
+        await fetch(`${API_BASE}/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+
+    // Disconnect WebSocket
+    if (socket) {
+      socket.disconnect();
+      socket = null;
+    }
+
+    token = null;
+    currentUsername = null;
+    sessionExpiry = null;
+    currentImageData = null;
+    document.getElementById('loginSection').classList.remove('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
+    document.getElementById('username').value = '';
+    document.getElementById('password').value = '';
+    document.getElementById('adminKey').value = '';
+    hideMessages();
+    updateSyncStatus('', false);
+
+    // Reset to login mode
+    if (isRegistering) {
+      toggleAuthMode();
+    }
+  }
+
+  // Image display and management functions
+  function displayImage(imageData) {
+    currentImageData = imageData;
+    document.getElementById('currentImage').src = imageData.imageUrl;
+    document.getElementById('imageInfo').textContent = `Filename: ${imageData.filename || 'Unknown'}`;
+
+    // Show image container and action buttons
+    document.getElementById('imageContainer').style.display = 'flex';
+    document.getElementById('actionButtons').style.display = 'block';
+    document.getElementById('waitingStatus').classList.add('hidden');
+    document.getElementById('completionMessage').classList.add('hidden');
+
+    console.log(`Assigned image: ${imageData.filename} (index: ${imageData.imageIndex})`);
+  }
+
+  function showWaitingStatus() {
+    document.getElementById('imageContainer').style.display = 'none';
+    document.getElementById('actionButtons').style.display = 'none';
+    document.getElementById('waitingStatus').classList.remove('hidden');
+    document.getElementById('completionMessage').classList.add('hidden');
+    currentImageData = null;
+  }
+
+  function hideWaitingStatus() {
+    document.getElementById('waitingStatus').classList.add('hidden');
+  }
+
+  function showCompletionMessage() {
+    document.getElementById('imageContainer').style.display = 'none';
+    document.getElementById('actionButtons').style.display = 'none';
+    document.getElementById('waitingStatus').classList.add('hidden');
+    document.getElementById('completionMessage').classList.remove('hidden');
+    currentImageData = null;
+  }
+
+  // Image labeling function
+  async function labelImage(isInteresting) {
+    if (!currentImageData) {
+      showError('No image assigned. Please request a new image.');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/label-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          imageIndex: currentImageData.imageIndex,
+          isInteresting: isInteresting
+        })
+      });
+
+      if (response.status === 401) {
+        showError('Session expired. Please login again.');
+        logout();
+        return;
+      }
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Show success feedback
+        const feedback = isInteresting ? '✅ Marked as Interesting' : '❌ Marked as Not Interesting';
+        showSuccess(`${feedback} - Getting your next image...`);
+
+        resetFilters();
+        currentImageData = null;
+
+        // Check if all images are completed
+        if (data.completed) {
+          setTimeout(() => {
+            showCompletionMessage();
+          }, 1500);
+        } else {
+          setTimeout(() => {
+            requestNewImage();
+          }, 1500);
+        }
+      } else {
+        if (data.alreadyCompleted) {
+          // Someone else labeled this image while user was working on it
+          showError('Another team member labeled this image while you were working on it! Getting you a new image...');
+          setTimeout(() => {
+            requestNewImage();
+          }, 2000);
+        } else {
+          showError(data.error || 'Failed to label image');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to label image:', error);
+      showError('Failed to label image. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Live statistics update
+  function updateLiveStats(data) {
+    document.getElementById('completedCount').textContent = data.completedImages || 0;
+    document.getElementById('assignedCount').textContent = data.assignedImages || 0;
+    document.getElementById('remainingCount').textContent = data.remainingImages || 0;
+    document.getElementById('totalCount').textContent = data.totalImages || 0;
+
+    // Update progress bar
+    const percentage = data.totalImages > 0 ? (data.completedImages / data.totalImages) * 100 : 0;
+    document.getElementById('progressFill').style.width = percentage + '%';
+
+    // Update progress text
+    const progressText = document.getElementById('progressText');
+    if (data.allCompleted) {
+      progressText.innerHTML = '🎉 All images completed by the team!';
+    } else {
+      progressText.innerHTML = `Team Progress: ${data.completedImages}/${data.totalImages} completed`;
+    }
+  }
+
+  // Team activity feed
+  function showTeamActivity(message) {
+    const activityFeed = document.getElementById('activityFeed');
+    const activityItem = document.createElement('div');
+    activityItem.className = 'team-activity';
+    activityItem.textContent = message;
+
+    // Add to top of feed
+    activityFeed.insertBefore(activityItem, activityFeed.firstChild);
+
+    // Remove old items (keep only last 5)
+    while (activityFeed.children.length > 5) {
+      activityFeed.removeChild(activityFeed.lastChild);
+    }
+
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+      if (activityItem.parentNode) {
+        activityItem.parentNode.removeChild(activityItem);
+      }
+    }, 10000);
+  }
+
+  // Filter functions
+  function initializeFilters() {
+    const filters = ['exposure', 'brightness', 'contrast', 'saturation', 'hue', 'blur', 'sepia', 'invert'];
+
+    filters.forEach(filter => {
+      const slider = document.getElementById(filter);
+      const valueSpan = document.getElementById(filter + 'Value');
+
+      slider.addEventListener('input', function() {
+        updateFilterValue(filter, this.value);
+        applyFilters();
+      });
+    });
+  }
+
+  function updateFilterValue(filter, value) {
+    const valueSpan = document.getElementById(filter + 'Value');
+
+    switch(filter) {
+      case 'exposure':
+      case 'brightness':
+      case 'contrast':
+      case 'saturation':
+      case 'sepia':
+      case 'invert':
+        valueSpan.textContent = value + '%';
+        break;
+      case 'hue':
+        valueSpan.textContent = value + '°';
+        break;
+      case 'blur':
+        valueSpan.textContent = value + 'px';
+        break;
+    }
+  }
+
+  function applyFilters() {
+    const image = document.getElementById('currentImage');
+    const exposure = document.getElementById('exposure').value / 100;
+    const brightness = document.getElementById('brightness').value / 100;
+    const contrast = document.getElementById('contrast').value / 100;
+    const saturation = document.getElementById('saturation').value / 100;
+    const hue = document.getElementById('hue').value;
+    const blur = document.getElementById('blur').value;
+    const sepia = document.getElementById('sepia').value / 100;
+    const invert = document.getElementById('invert').value / 100;
+
+    const exposureAdjustedBrightness = brightness * exposure;
+    const exposureAdjustedContrast = contrast * (0.5 + exposure * 0.5);
+
+    image.style.filter = `brightness(${exposureAdjustedBrightness}) contrast(${exposureAdjustedContrast}) saturate(${saturation}) hue-rotate(${hue}deg) blur(${blur}px) sepia(${sepia}) invert(${invert})`;
+  }
+
+  function resetFilters() {
+    document.getElementById('exposure').value = 100;
+    document.getElementById('brightness').value = 100;
+    document.getElementById('contrast').value = 100;
+    document.getElementById('saturation').value = 100;
+    document.getElementById('hue').value = 0;
+    document.getElementById('blur').value = 0;
+    document.getElementById('sepia').value = 0;
+    document.getElementById('invert').value = 0;
+
+    updateFilterValue('exposure', 100);
+    updateFilterValue('brightness', 100);
+    updateFilterValue('contrast', 100);
+    updateFilterValue('saturation', 100);
+    updateFilterValue('hue', 0);
+    updateFilterValue('blur', 0);
+    updateFilterValue('sepia', 0);
+    updateFilterValue('invert', 0);
+
+    applyFilters();
+  }
+
+  // Results functions
+  async function viewResults() {
+    try {
+      const response = await fetch(`${API_BASE}/results`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 401) {
+        showError('Session expired. Please login again.');
+        logout();
+        return;
+      }
+
+      const data = await response.json();
+      displayResults(data);
+    } catch (error) {
+      console.error('Failed to load results:', error);
+      showError('Failed to load results. Please try again.');
+    }
+  }
+
+  function displayResults(data) {
+    const resultsContent = document.getElementById('resultsContent');
+    let html = `
+      <h4>Team Results Summary</h4>
+      <div style="display: flex; gap: 20px; margin: 15px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+        <div style="text-align: center;">
+          <div style="font-size: 24px; color: #00d4ff; font-weight: bold;">${data.completedImages || 0}</div>
+          <div style="font-size: 12px; color: #999;">Completed</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 24px; color: #ffce54; font-weight: bold;">${data.remainingImages || 0}</div>
+          <div style="font-size: 12px; color: #999;">Remaining</div>
+        </div>
+        <div style="text-align: center;">
+          <div style="font-size: 24px; color: #2ed573; font-weight: bold;">${data.totalImages || 0}</div>
+          <div style="font-size: 12px; color: #999;">Total Images</div>
+        </div>
+      </div>
+    `;
+
+    html += '<table style="width: 100%; border-collapse: collapse; margin-top: 15px;">';
+    html += '<tr style="background: rgba(255,255,255,0.1);">';
+    html += '<th style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Filename</th>';
+    html += '<th style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Status</th>';
+    html += '<th style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Result</th>';
+    html += '<th style="padding: 10px; border: 1px solid rgba(255,255,255,0.2);">Labeled By</th>';
+    html += '</tr>';
+
+    data.summary.forEach((result, index) => {
+      const statusIcon = result.isCompleted ? '✅' : '⏳';
+      const statusText = result.isCompleted ? 'Complete' : 'Pending';
+      const statusColor = result.isCompleted ? '#2ed573' : '#999';
+
+      let resultText = '';
+      let resultColor = '#999';
+
+      if (result.isCompleted) {
+        if (result.interesting > result.notInteresting) {
+          resultText = '👍 Interesting';
+          resultColor = '#2ed573';
+        } else if (result.notInteresting > result.interesting) {
+          resultText = '👎 Not Interesting';
+          resultColor = '#ff4757';
+        } else {
+          resultText = '🤷‍♂️ Tie';
+          resultColor = '#ffce54';
+        }
+      } else {
+        resultText = 'Not labeled yet';
+      }
+
+      html += `<tr>
+        <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); font-family: monospace; font-size: 12px;">${result.filename || `Image ${index + 1}`}</td>
+        <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); color: ${statusColor};">${statusIcon} ${statusText}</td>
+        <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); color: ${resultColor};">${resultText}</td>
+        <td style="padding: 10px; border: 1px solid rgba(255,255,255,0.2); color: #00d4ff;">${result.labeledBy || 'N/A'}</td>
+      </tr>`;
+    });
+
+    html += '</table>';
+
+    resultsContent.innerHTML = html;
+    document.getElementById('resultsSection').classList.remove('hidden');
+  }
+
+  // Utility functions
+  function showError(message) {
+    const errorDiv = document.getElementById('authError');
+    errorDiv.textContent = message;
+    errorDiv.classList.remove('hidden');
+    hideRateLimitWarning();
+
+    setTimeout(() => {
+      errorDiv.classList.add('hidden');
+    }, 8000);
+  }
+
+  function showSuccess(message) {
+    const successDiv = document.getElementById('authSuccess');
+    successDiv.textContent = message;
+    successDiv.classList.remove('hidden');
+    hideMessages();
+
+    setTimeout(() => {
+      successDiv.classList.add('hidden');
+    }, 5000);
+  }
+
+  function showRateLimitWarning(message) {
+    const warningDiv = document.getElementById('rateLimitWarning');
+    warningDiv.textContent = message;
+    warningDiv.classList.remove('hidden');
+    hideMessages();
+
+    setTimeout(() => {
+      warningDiv.classList.add('hidden');
+    }, 10000);
+  }
+
+  function hideMessages() {
+    document.getElementById('authError').classList.add('hidden');
+    document.getElementById('authSuccess').classList.add('hidden');
+  }
+
+  function hideRateLimitWarning() {
+    document.getElementById('rateLimitWarning').classList.add('hidden');
+  }
+
+  function setLoading(loading) {
+    const buttons = document.querySelectorAll('.btn');
+    const inputs = document.querySelectorAll('input');
+
+    buttons.forEach(btn => {
+      btn.disabled = loading;
+    });
+
+    inputs.forEach(input => {
+      input.disabled = loading;
+    });
+
+    if (loading) {
+      document.body.classList.add('loading');
+    } else {
+      document.body.classList.remove('loading');
+    }
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', function(event) {
+    if (token && currentImageData && !document.getElementById('completionMessage').classList.contains('hidden') === false) {
+      if (event.key === '1' || event.key === 'ArrowLeft') {
+        event.preventDefault();
+        labelImage(false);
+      } else if (event.key === '2' || event.key === 'ArrowRight') {
+        event.preventDefault();
+        labelImage(true);
+      }
+    }
+
+    if (event.key === 'Enter' && !document.getElementById('loginSection').classList.contains('hidden')) {
+      event.preventDefault();
+      if (isRegistering) {
+        register();
+      } else {
+        login();
+      }
+    }
+
+    // Space bar to request new image when waiting
+    if (event.key === ' ' && !document.getElementById('waitingStatus').classList.contains('hidden')) {
+      event.preventDefault();
+      requestNewImage();
+    }
+  });
+
+  // Initialize the app
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeFilters();
+    resetFilters();
+
+    // Update session display every minute
+    setInterval(updateSessionDisplay, 60000);
+
+    // Periodic connection health check
+    setInterval(() => {
+      if (token && socket && !socket.connected) {
+        console.log('WebSocket disconnected, attempting to reconnect...');
+        connectWebSocket();
+      }
+    }, 30000);
+  });
+
+  // Handle page visibility changes
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden && token && socket && !socket.connected) {
+      console.log('Page became visible, checking WebSocket connection...');
+      connectWebSocket();
+    }
+  });
+
+  // Handle before unload to clean up
+  window.addEventListener('beforeunload', function() {
+    if (socket) {
+      socket.disconnect();
+    }
+  });
+</script>
+</body>
+</html>
