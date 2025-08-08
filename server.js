@@ -6,6 +6,7 @@ const fsSync = require('fs');
 const crypto = require('crypto');
 const bcrypt = require('bcrypt');
 const rateLimit = require('express-rate-limit');
+const dotenv = require('dotenv').config()
 const http = require('http');
 const { Server } = require('socket.io');
 const axios = require('axios');
@@ -19,6 +20,8 @@ const io = new Server(server, {
     }
 });
 
+const env = process.env
+
 const PORT = process.env.PORT || 3000;
 
 // Security configuration
@@ -27,7 +30,7 @@ const SESSION_TIMEOUT = 24 * 60 * 60 * 1000; // 24 hours
 const SALT_ROUNDS = 12;
 const IMAGE_ASSIGNMENT_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
-const DISCORD_PROGRESS_WEBHOOK = "https://discord.com/api/webhooks/1402433014696247448/0AiKzxi0yityMZFdFSF-vj14km1r9tcaoQq3VwxUjHGd6CCvpVENr2zyOZXGQS-kGpDf"
+const DISCORD_PROGRESS_WEBHOOK = env.DISCORD_WEBHOOK
 
 // Data file paths
 const DATA_DIR = path.join(__dirname, 'data');
